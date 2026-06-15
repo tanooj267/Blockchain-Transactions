@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Blockchain Client</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Blockchain Client</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Wallet Generator
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/make/transaction">Make Transaction</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/view/transactions">View Transactions</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="/check/balance">Check Balance
+                <span class="sr-only">(current)</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card-body">
+            <h4 class="card-title">Check Wallet Balance</h4>
+            <p class="card-text">Enter a wallet address and blockchain node URL to check the balance</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="container alert alert-secondary">
+
+        <div class="row">
+          <label class="col-sm-2">Wallet Address:</label>
+          <div class="col-sm-10">
+            <textarea id="wallet_address" rows="3" class="form-control" placeholder="Enter wallet public key address"></textarea>
+          </div>
+        </div>
+
+        <br>
+
+        <div class="row">
+          <label class="col-sm-2">Node URL:</label>
+          <div class="col-sm-10">
+            <textarea id="node_url" rows="1" class="form-control">http://127.0.0.1:5000</textarea>
+          </div>
+        </div>
+
+        <br>
+
+        <div class="row">
+          <div class="col-lg-12 text-center">
+            <input type="button" id="check_balance_button" class="btn btn-primary btn-lg" value="Check Balance">
+          </div>
+        </div>
+
+    </div>
+
+    <br>
+
+    <!-- Balance Result Display -->
+    <div class="container" id="balance_result" style="display:none;">
+      <div class="alert alert-success" role="alert">
+        <h4 class="alert-heading">Wallet Balance</h4>
+        <hr>
+        <p><strong>Available Balance:</strong> <span id="balance_value">0</span> coins</p>
+        <p><strong>Total Received:</strong> <span id="total_received">0</span> coins (includes pending)</p>
+        <p><strong>Total Sent:</strong> <span id="total_sent">0</span> coins</p>
+        <p id="pending_note" style="display:none; color: orange;"><strong>Note:</strong> Some coins are pending. Mine a block on the blockchain node to fully confirm them.</p>
+      </div>
+    </div>
+
+    <!-- Error Message Display -->
+    <div class="container" id="error_message" style="display:none;">
+      <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Error</h4>
+        <p id="error_text">Unable to fetch balance. Please check the wallet address and node URL.</p>
+      </div>
+    </div>
+
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+
+    <script>
+
+      $(function(){
+
+        $('#check_balance_button').click(function(){
+
+          var address = document.getElementById("wallet_address").value.trim();
+          var nodeUrl = document.getElementById("node_url").value.trim();
+
+          if (!address) {
+            document.getElementById("error_text").innerHTML = "Please enter a wallet address.";
+            document.getElementById("error_message").style.display = "block";
+            document.getElementById("balance_result").style.display = "none";
+            return;
+          }
+
+          // Hide previous results
+          document.getElementById("balance_result").style.display = "none";
+          document.getElementById("error_message").style.display = "none";
+
+          $.ajax({
+            url: nodeUrl + "/wallet/balance",
+            type: 'POST',
+            data: { address: address },
+            success: function(response){
+
+              console.log(response);
+              
+              document.getElementById("balance_value").innerHTML = response.balance.toFixed(2);
+              document.getElementById("total_received").innerHTML = response.total_received.toFixed(2);
+              document.getElementById("total_sent").innerHTML = response.total_sent.toFixed(2);
+
+              if (response.has_pending) {
+                document.getElementById("pending_note").style.display = "block";
+              } else {
+                document.getElementById("pending_note").style.display = "none";
+              }
+              
+              document.getElementById("balance_result").style.display = "block";
+              
+            },
+            error: function(error){
+              console.log(error);
+              document.getElementById("error_text").innerHTML = "Unable to fetch balance. Please check the wallet address and node URL.";
+              document.getElementById("error_message").style.display = "block";
+            }
+          });
+        });
+
+      })
+
+    </script>
+
+
+
+  </body>
+
+</html>
